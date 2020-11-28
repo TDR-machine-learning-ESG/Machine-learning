@@ -155,8 +155,8 @@ class Paddle(pygame.sprite.Sprite):
 
         if self.rect.x < 0:
             self.rect.x = 0
-        elif self.rect.x > size[0] - 100:
-            self.rect.x = size[0] - 100
+        elif self.rect.x > size[0]:
+            self.rect.x = size[0]
         if self.rect.y < 0:
             self.rect.y = 0
         elif self.rect.y > size[1]:
@@ -195,16 +195,15 @@ class Paddle(pygame.sprite.Sprite):
 
         # print ((self.PosControl +1)%2 )
         # print (xPassControl[self.PosControl])
-        if self.winner == True:
-            print (self.PosControl)
+
 
         if (self.PosControl) % 2 == 0:
-            self.score = self.poScore + (Scorey[self.PosControl]) - self.rect.y + self.rect.x
+            self.score = self.poScore + Scorey[self.PosControl] - self.rect.y + self.rect.x
         else:
             self.score = self.poScore + Scorey[self.PosControl] + self.rect.y + self.rect.x
 
         if (self.rect.x) > xPassControl[self.PosControl]:
-            self.poScore = self.score + 200
+            self.poScore = self.score + 302
             self.PosControl += 1
         self.xlast = self.rect.x
         self.ylast = self.rect.y
@@ -300,7 +299,7 @@ class Cuarto1(Cuarto):
         ddd = 0
         for item in paredes:
             pared = Pared(item[0], item[1], item[2], item[3], item[4])
-            pparedes.append((item[0] - 100, item[1]))
+            pparedes.append((item[0]-100, item[1]))
             if ddd > 5:
                 Scorey.append(item[1])
 
@@ -309,10 +308,10 @@ class Cuarto1(Cuarto):
             ddd += 1
         pparedes.append((780-100, 450))
         Scorey.append(450)
-        xPassControl.append(780)
-        pparedes.append((820, 450))
-        Scorey.append(450)
         xPassControl.append(820)
+        # pparedes.append((820-100, 450))
+        # Scorey.append(450)
+        # xPassControl.append(820)
 
 
 
@@ -471,7 +470,9 @@ generation = 1
 b = 0
 MXScore=0
 FAST = False
-cu = 5
+cu = 0
+c = 0
+finalisimo = False
 while not done:
     screen.fill(FILL)
     cuarto_actual.pared_lista.draw(screen)
@@ -493,6 +494,8 @@ while not done:
     for i, paddle in enumerate(paddles):
         # If you change the number of inputs, be sure to change the layer_structure at
         # the top and the input text in displayNetwork
+
+
         input = np.array([[paddle.rect.x, paddle.rect.y]])
 
         if paddle.returnIndex() % 2 == 0:
@@ -543,6 +546,10 @@ while not done:
 
 
         # Update high_score and high_scorer
+        if paddle.rect.x > 784 and paddle.winner == True:
+            finalisimo = True
+            break
+
 
         if paddle.score > high_score:
             high_score = paddle.score
@@ -567,7 +574,7 @@ while not done:
     # If all the paddles are dead, reproduce the most fit one
 
 
-    if still_alive == 0 or b > 3+generation/3  or FAST == True:
+    if still_alive == 0 or b > 3+generation/1  or FAST == True:
         generation += 1
         winner.reset()
         # print(high_score_index)
@@ -583,6 +590,24 @@ while not done:
         paddles.append(winner)
         # balls.append(Ball())
 
+
+    if cuarto_actual_no == c and finalisimo == True:
+        cuarto_actual_no = c + 1
+        c += 1
+       
+        cuarto = Cuarto1()
+        cuartos.append(cuarto)
+        cuarto_actual = cuartos[cuarto_actual_no]
+        generation += 1
+        winner.reset()
+        paddles = []
+        b = 0
+        for i in range(COUNT - 1):
+            paddles.append(Paddle(coefs=mutateCoefs(winner.coefs), intercepts=mutateIntercepts(winner.intercepts)))
+            # balls.append(Ball())
+        # add the winner itself
+        paddles.append(winner)
+        finalisimo = False
     b = b+(clock.get_time()/1000)
     font = pygame.font.SysFont('Calibri', 30, False, False)
     text = font.render("Score = " + str(math.trunc(high_score/10)), True, TEXT)
