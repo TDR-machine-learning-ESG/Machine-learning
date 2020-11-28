@@ -21,13 +21,12 @@ VIOLETA = (255, 0, 255)
 x1 = 750
 y1 = 100
 resetea = False
-
 pygame.init()
 
 # Here you can specify the structure of the neural network. This includes the input layer and output layer.
 # e.g 3 inputs, 5 node hidden layer, 4 outputs would be [3, 5, 4]
 # Be sure to update this if you add inputs
-layer_structure = [42, 6]
+layer_structure = [42,10,20,10, 6]
 
 # Initializing the display window
 size = (800, 700)
@@ -36,13 +35,13 @@ pygame.display.set_caption("pong")
 
 testCoefs = [np.array([[0.38238344, 0.7515745, 0.29565119, 0.35490288, 0.97040034],
                        [0.33545982, 0.0973694, 0.41539856, 0.76129553, 0.93089118],
-                       [0.85154809, 0.0240888, 0.74555908, 0.34759429, 0.37355357],
+                       [0.85154809, -0.0240888, 0.74555908, -0.34759429, 0.37355357],
                        [0.95104127, 0.29077331, 0.21244898, 0.78876218, 0.35243364]]),
-             np.array([[0.25498077, 0.03853811, 0.76089995],
+             np.array([[0.25498077, 0.91735276, 0.76089995],
                        [0.36535132, 0.60519588, 0.08365677],
-                       [0.12852428, 0.0156597, 0.03317768],
+                       [0.12852428, 0.0156597, -0.03317768],
                        [0.1276382, 0.13700435, 0.6786845],
-                       [0.71931642, 0.8930938, 0.24983195]])]
+                       [0.71931642, 0.8930938, 0.24538791]])]
 
 
 # Paddle class
@@ -67,14 +66,15 @@ class Pared(pygame.sprite.Sprite):
 
 class Paddle(pygame.sprite.Sprite):
 
-    def __init__(self, x=20, y=250, xspeed=0, yspeed=0, coefs=0, intercepts=0):
+    def __init__(self, x=30, y=250, xspeed=0, yspeed=0, coefs=0, intercepts=0):
 
         super().__init__()
-
+        self.PosControl = 0
         self.image = pygame.Surface([15, 15])
         self.image.fill(VIOLETA)
         self.rect = self.image.get_rect()
-
+        self.secondChance = 0
+        self.ShallDie = False
         self.rect.x = x
         self.rect.y = y
         self.ylast = y - yspeed
@@ -82,7 +82,7 @@ class Paddle(pygame.sprite.Sprite):
         self.yspeed = yspeed
         self.xspeed = xspeed
         self.alive = True
-        self.score = 0
+        self.score = self.rect.x -20
         self.command = 2
         self.winner = False
         if coefs == 0:
@@ -135,7 +135,7 @@ class Paddle(pygame.sprite.Sprite):
     def reset(self):
         self.rect.x = 20
         self.rect.y = 250
-        self.ylast = 20
+        self.ylast = 30
         self.xlast = 250
         self.xspeed = 0
         self.yspeed = 0
@@ -146,8 +146,9 @@ class Paddle(pygame.sprite.Sprite):
     def update(self, paredes):
         self.xlast = self.rect.x
         self.ylast = self.rect.y
-        self.rect.x += self.xspeed
-        self.rect.y += self.yspeed
+
+
+
         if self.rect.x < 0:
             self.rect.x = 0
         elif self.rect.x > size[0] - 100:
@@ -157,42 +158,71 @@ class Paddle(pygame.sprite.Sprite):
         elif self.rect.y > size[1]:
             self.rect.y = size[1] - 35
 
+        self.rect.y += self.yspeed
         lista_impactos_bloques = pygame.sprite.spritecollide(self, paredes, False)
 
         for bloque in lista_impactos_bloques:
-            # Si nos estamos desplazando hacia la derecha, hacemos que nuestro lado derecho sea el lado izquierdo del
-            # objeto que hemos tocado.
-            if self.xspeed > 0:
-                paddle.alive = False
-                paddle.score -= round(abs((self.rect.x + 50) - bloque.rect.x) / 100, 2)
-                score = -1
+            # Si nos estamos desplazando hacia la derecha, hacemos que nuestro lado derecho sea el lado izquierdo del objeto que hemos tocado.
+            if self.yspeed > 0:
+                self.rect.bottom = bloque.rect.top
+
+
             else:
                 # En caso contrario, si nos desplazamos hacia la izquierda, hacemos lo opuesto.
-                paddle.alive = False
-                paddle.score -= round(abs((self.rect.x + 50) - bloque.rect.x) / 100, 2)
-                score = -1
+                self.rect.top = self.rect.bottom
+
 
         # Desplazar arriba/izquierda
 
+        self.rect.x += self.xspeed
         # Comprobamos si hemos chocado contra algo
         lista_impactos_bloques = pygame.sprite.spritecollide(self, paredes, False)
 
         for bloque in lista_impactos_bloques:
 
             # Reseteamos nuestra posición basándonos en la parte superior/inferior del objeto.
-            if self.yspeed > 0:
-                paddle.alive = False
-                paddle.score -= round(abs((self.rect.y + 50) - bloque.rect.y) / 100, 2)
-                score = -1
-            else:
-                paddle.alive = False
-                paddle.score -= 1
-                paddle.score -= round(abs((self.rect.y + 50) - bloque.rect.y) / 100, 2)
+            if self.xspeed > 0:
 
+                self.rect.right = bloque.rect.left
+
+            else:
+                self.rect.left = bloque.rect.right
+
+
+        # print ((self.PosControl +1)%2 )
+        # print (xPassControl[self.PosControl])
+        print (self.PosControl)
+
+        if (self.PosControl+1)%2==1:
+            self.score = (self.rect.x -20) * math.sqrt((Scorey[self.PosControl]+self.rect.y)**2)
+        else:
+            self.score = (self.rect.x -20) * math.sqrt((Scorey[self.PosControl]+500+self.rect.y)**2)
+
+
+
+        if (self.rect.x+105) > xPassControl[self.PosControl]:
+            self.PosControl +=1
         self.xlast = self.rect.x
         self.ylast = self.rect.y
 
+
+
+    # def Kill(self,pastx,pasty):
+    #
+    #
+    #     if (pastx > self.rect.x or pastx == self.rect.x) and (pasty == self.rect.y):
+    #         self.ShallDie = True
+    #         self.alive = False
+            # self.secondChance += 1
+        # else:
+        #     self.ShallDie = False
+        #     self.secondChance =0
+
+        # if self.ShallDie == True and self.secondChance == 2:
+        #     self.alive = False
+
     # Draw the paddle to the screen
+
     def draw(self):
         if not self.winner:
             pygame.draw.rect(screen, BLACK, [self.rect.x, self.rect.y, 15, 15])
@@ -200,6 +230,7 @@ class Paddle(pygame.sprite.Sprite):
         else:
             pygame.draw.rect(screen, BLACK, [self.rect.x, self.rect.y, 15, 15])
             pygame.draw.rect(screen, BLUE, [self.rect.x + 2, self.rect.y, 15 - 4, 15 - 4])
+
 
 
 # Ball class
@@ -217,7 +248,11 @@ class Cuarto:
         self.pared_lista = pygame.sprite.Group()
         self.sprites_enemigos = pygame.sprite.Group()
 
+
 pparedes = []
+Scorey = []
+ReferenceY = []
+xPassControl = []
 class Cuarto1(Cuarto):
     """Esto crea todas las paredes del cuarto 1"""
     paredes = []
@@ -239,77 +274,37 @@ class Cuarto1(Cuarto):
                    [780, 450, 20, 250, VERDE],  # Paredes que si són paredes
 
                    # Obstaculo
-                   [50, varr.randint(140, 400), 10, 500, ROJO],
+                   [50, 300, 10, 500, ROJO,0],
                    [100, 120, 10, 500, ROJO],
-                   [150, varr.randint(140, 400), 10, 500, ROJO],
-                   [200, 120, 10, 500, ROJO],
-                   [250, varr.randint(140, 400), 10, 500, ROJO],
-                   [300, 120, 10, 500, ROJO],
-                   [350, varr.randint(140, 400), 10, 500, ROJO],
-                   [400, 120, 10, 500, ROJO],
-                   [450, varr.randint(140, 400), 10, 500, ROJO],
-                   [500, 120, 10, 500, ROJO],
-                   [550, varr.randint(140, 400), 10, 500, ROJO],
-                   [600, 120, 10, 500, ROJO],
-                   [650, varr.randint(140, 400), 10, 500, ROJO],
-                   [20, 680, 760, 20, VERDE],  # pared
-                   [700, 120, 10, 500, ROJO]
+                   [150, varr.randint(140, 400), 10, 500, ROJO,1],
+                   [200, 120, 10, 500, ROJO,2],
+                   [250, varr.randint(140, 400), 10, 500, ROJO,3],
+                   [300, 120, 10, 500, ROJO,4],
+                   [350, varr.randint(140, 400), 10, 500, ROJO,5],
+                   [400, 120, 10, 500, ROJO,6],
+                   [450, varr.randint(140, 400), 10, 500, ROJO,7],
+                   [500, 120, 10, 500, ROJO,8],
+                   [550, varr.randint(140, 400), 10, 500, ROJO,9],
+                   [600, 120, 10, 500, ROJO,10],
+                   [650, varr.randint(140, 400), 10, 500, ROJO,11],
+                   [20, 680, 760, 20, VERDE,12],  # pared
+                   [700, 120, 10, 500, ROJO,13]
                    ]
 
         # Iteramos a través de la lista. Creamos la pared y la añadimos a la lista.
+        ddd = 0
         for item in paredes:
+
             pared = Pared(item[0], item[1], item[2], item[3], item[4])
-
-            pparedes.append(item[0])
+            pparedes.append(item[0]-100)
             pparedes.append(item[1])
+            if ddd > 6:
+                Scorey.append(item[1])
+                ReferenceY.append(item[5])
+                xPassControl.append(item[0])
             self.pared_lista.add(pared)
-        print (len(pparedes))
+            ddd += 1
 
-class Ball:
-
-    def __init__(self, x=50, y=50, xspeed=5, yspeed=5):
-        self.recty = None
-        self.x = x
-        self.y = y
-        self.winner = False
-        self.xlast = x - xspeed
-        self.ylast = y - yspeed
-        self.xspeed = xspeed
-        self.yspeed = yspeed
-        self.alive = True
-
-    # Update position based on speed
-    def update(self, paddle):
-        self.xlast = self.x
-        self.ylast = self.y
-
-        self.x += self.xspeed
-        self.y += self.yspeed
-
-        # Accounts for bouncing off walls and paddle
-        if self.x < 0:
-            self.x = 0
-            self.xspeed = self.xspeed * -1
-        elif self.x > size[0] - 15:
-            self.x = size[0] - 15
-            self.xspeed = self.xspeed * -1
-        elif self.y < 0:
-            self.y = 0
-            self.yspeed = self.yspeed * -1
-        elif paddle.rect.x < self.x < paddle.rect.x + 15 and self.ylast < paddle.rect.y - 35 <= self.recty:
-            self.yspeed = self.yspeed * -1
-            paddle.score = paddle.score + 1
-        elif self.y > size[1]:
-            self.yspeed = self.yspeed * -1
-            paddle.alive = False
-            paddle.score -= round(abs((paddle.rect.x + 50) - self.x) / 100, 2)
-
-    # Draw ball to screen
-    def draw(self):
-        if not self.winner:
-            pygame.draw.rect(screen, WHITE, [self.x, self.y, 15, 15])
-        else:
-            pygame.draw.rect(screen, VIOLETA, [self.x, self.y, 15, 15])
 
 
 # Predicts the output for a given input given an array of coefficients and an array of intercepts
@@ -379,15 +374,15 @@ def displayNetwork(layer_sctructure, coefs):
     max_coef = np.max(coefs[0])
 
     # Determines how much space this visual network will take up
-    height = 300
-    width = 300
+    height = 100
+    width = 100
 
     inputs = []
     cdd = 0
     while cdd < input.size:
-        inputs.append (" ")
-        print (inputs[cdd])
-        cdd +=1
+        inputs.append(" ")
+
+        cdd += 1
     outputs = ["left", "right", "x stop", "up", "down", "y stop"]
 
     layerCount = len(layer_structure)
@@ -464,6 +459,10 @@ paddles[-1].winner = True
 
 # game's main loop
 generation = 1
+b = 0
+MXScore=0
+FAST = False
+cu = 5
 while not done:
     screen.fill(FILL)
     cuarto_actual.pared_lista.draw(screen)
@@ -474,6 +473,7 @@ while not done:
     high_score_index = -1
 
     # Allow user to exit at any time
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
@@ -486,43 +486,52 @@ while not done:
         input = np.array([[paddle.rect.x, paddle.rect.y]])
 
         newa = np.array([pparedes])
-        print (input)
-        input = np.append(input,newa,axis=1)
-        print (newa)
-        print (input)
 
-        layer_structure [0] = int(input.size)
+        input = np.append(input, newa, axis=1)
+
+
+        layer_structure[0] = int(input.size)
         paddle.command = calculateOutput(input, layer_structure, paddle.coefs, paddle.intercepts)
 
         # 0=left, 1=right, 2=stop, 3=up, 4=down
         if paddle.command == 0:
-            paddle.xspeed = -5
+            paddle.xspeed = -10
         elif paddle.command == 1:
-            paddle.xspeed = 5
+            paddle.xspeed = 10
         elif paddle.command == 2:
             paddle.xspeed = 0
         elif paddle.command == 3:
-            paddle.yspeed = -5
+            paddle.yspeed = -10
         elif paddle.command == 4:
-            paddle.yspeed = 5
+            paddle.yspeed = 10
         elif paddle.command == 5:
             paddle.yspeed = 0
 
         # Update position of all living paddles
-        if paddle.alive:
+
+        if paddle.alive == True:
+            # pastx = paddle.rect.x
+            # pasty = paddle.rect.y
+            # pastScore = paddle.score
             paddle.update(cuarto_actual.pared_lista)  # poner: (cuarto_actual.pared_lista)
             # balls[i].update(paddle)
+            # paddle.Kill(pastx,pasty)
             still_alive += 1
+
+
+        # if paddle.score < pastScore and paddle.rect.x == pastx and paddle.rect.y == pasty:
+        #     paddle.alive = False
+
 
         # Update high_score and high_scorer
         if paddle.score > high_score:
             high_score = paddle.score
             high_score_index = i
             winner = paddles[i]
-            # winnner = balls [i]
-            # balls [i].draw()
             winner.winner = True
-            # winnner.winner = True
+
+        if MXScore < high_score:
+            MXScore = high_score
 
         # Draw everything but the winner
         if paddle.alive and paddle != winner:
@@ -534,15 +543,18 @@ while not done:
     # draw the winner last (so that it is not hidden behind other paddles)
     paddles[high_score_index].draw()
     # balls[high_score_index].draw()
-
+    cuarto_actual.pared_lista.draw(screen)
     # If all the paddles are dead, reproduce the most fit one
-    if still_alive == 0:
+
+
+    if still_alive == 0 or b > 3  or FAST == True:
         generation += 1
         winner.reset()
         # print(high_score_index)
         # clear the generation
         paddles = []
-        balls = []
+
+        b=0
         # Fill it with mutations of the winner
         for i in range(COUNT - 1):
             paddles.append(Paddle(coefs=mutateCoefs(winner.coefs), intercepts=mutateIntercepts(winner.intercepts)))
@@ -551,17 +563,19 @@ while not done:
         paddles.append(winner)
         # balls.append(Ball())
 
-    # score board
+    b = b+(clock.get_time()/1000)
     font = pygame.font.SysFont('Calibri', 30, False, False)
-    text = font.render("Score = " + str(high_score), True, TEXT)
+    text = font.render("Score = " + str(math.trunc(high_score/1000)), True, TEXT)
     screen.blit(text, [size[0] - 325, 30])
+    text = font.render("MXScore = " + str(math.trunc(MXScore / 1000)), True, TEXT)
+    screen.blit(text, [size[0] - 325, 60])
     text2 = font.render("Still alive = " + str(still_alive), True, TEXT)
-    screen.blit(text2, [size[0] - 325, 90])
+    screen.blit(text2, [size[0] - 600, 60])
     text2 = font.render("Generation = " + str(generation), True, TEXT)
-    screen.blit(text2, [size[0] - 325, 150])
-    displayNetwork(layer_structure, winner.coefs)
+    screen.blit(text2, [size[0] - 600, 30])
+    text2 = font.render("Time = " + str(math.trunc(b)), True, TEXT)
+    screen.blit(text2, [size[0] - 800, 30])
+    # displayNetwork(layer_structure, winner.coefs)
 
     pygame.display.flip()
     clock.tick(60)
-
-pygame.quit()
