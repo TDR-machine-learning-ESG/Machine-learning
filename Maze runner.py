@@ -10,7 +10,7 @@ GREEN = (0, 180, 0)
 BLUE = (50, 200, 255)
 FILL = BLACK
 TEXT = WHITE
-aaa = 0
+
 NEGRO = (0, 0, 0)
 BLANCO = (255, 255, 255)
 AZUL = (0, 0, 255)
@@ -18,9 +18,6 @@ VERDE = (0, 255, 0)
 ROJO = (255, 0, 0)
 VIOLETA = (255, 0, 255)
 
-x1 = 750
-y1 = 100
-resetea = False
 pygame.init()
 
 
@@ -30,8 +27,9 @@ pygame.init()
 layer_structure = [3,4,5,6]
 
 # Initializing the display window
-size = (800, 700)
+size = (800, 900)
 screen = pygame.display.set_mode(size)
+
 pygame.display.set_caption("pong")
 
 testCoefs = [np.array([[0.38238344, 0.7515745, 0.29565119, 0.35490288, 0.97040034],
@@ -67,7 +65,7 @@ class Pared(pygame.sprite.Sprite):
 
 class Paddle(pygame.sprite.Sprite):
 
-    def __init__(self, x=30, y=250, xspeed=0, yspeed=0, coefs=0, intercepts=0):
+    def __init__(self, x=30, y=450, xspeed=0, yspeed=0, coefs=0, intercepts=0):
 
         super().__init__()
         self.PosControl = 0
@@ -136,9 +134,9 @@ class Paddle(pygame.sprite.Sprite):
     # Reset score, speed and position
     def reset(self):
         self.rect.x = 20
-        self.rect.y = 250
+        self.rect.y = 450
         self.ylast = 30
-        self.xlast = 250
+        self.xlast = 450
         self.xspeed = 0
         self.yspeed = 0
         self.alive = True
@@ -217,13 +215,13 @@ class Paddle(pygame.sprite.Sprite):
     #     if (pastx > self.rect.x or pastx == self.rect.x) and (pasty == self.rect.y):
     #         self.ShallDie = True
     #         self.alive = False
-            # self.secondChance += 1
-        # else:
-        #     self.ShallDie = False
-        #     self.secondChance =0
+    # self.secondChance += 1
+    # else:
+    #     self.ShallDie = False
+    #     self.secondChance =0
 
-        # if self.ShallDie == True and self.secondChance == 2:
-        #     self.alive = False
+    # if self.ShallDie == True and self.secondChance == 2:
+    #     self.alive = False
 
     # Draw the paddle to the screen
 
@@ -279,7 +277,7 @@ class Cuarto1(Cuarto):
                    [20, 680, 760, 20, VERDE, 0],
                    # Obstaculo
                    [50, 300, 10, 500, ROJO,0],
-                   [100, 120, 10, 500, AZUL,1],
+                   [100, 120, 10, 500, ROJO,1],
                    [150, varr.randint(140, 400), 10, 500, ROJO,2],
                    [200, 120, 10, 500, ROJO,3],
                    [250, varr.randint(140, 400), 10, 500, ROJO,4],
@@ -291,24 +289,25 @@ class Cuarto1(Cuarto):
                    [550, varr.randint(140, 400), 10, 500, ROJO,10],
                    [600, 120, 10, 500, ROJO,11],
                    [650, varr.randint(140, 400), 10, 500, ROJO,12],
-                     # pared
+                   # pared
                    [700, 120, 10, 500, ROJO,13]
                    ]
 
         # Iteramos a través de la lista. Creamos la pared y la añadimos a la lista.
         ddd = 0
         for item in paredes:
-            pared = Pared(item[0], item[1], item[2], item[3], item[4])
+            pared = Pared(item[0], item[1]+200, item[2], item[3], item[4])
             pparedes.append((item[0]-100, item[1]))
             if ddd > 5:
-                Scorey.append(item[1])
+                Scorey.append(item[1]+200)
 
                 xPassControl.append(item[0])
             self.pared_lista.add(pared)
             ddd += 1
-        pparedes.append((780-100, 450))
-        Scorey.append(450)
+        pparedes.append((780-100, 650))
+        Scorey.append(650)
         xPassControl.append(820)
+
         # pparedes.append((820-100, 450))
         # Scorey.append(450)
         # xPassControl.append(820)
@@ -387,11 +386,9 @@ def displayNetwork(layer_sctructure, coefs):
 
     inputs = []
     cdd = 0
-    while cdd < input.size:
-        inputs.append(" ")
 
-        cdd += 1
-    outputs = ["left", "right", "x stop", "up", "down", "y stop"]
+    inputs = ["PosX","PosY","Distància"]
+    outputs = ["Left", "Right", "X stop", "Up", "Down", "Y stop"]
 
     layerCount = len(layer_structure)
     # This will store the positions of all the nodes (organized with sub-lists of each layer)
@@ -399,15 +396,15 @@ def displayNetwork(layer_sctructure, coefs):
 
     # Label inputs
     for i in range(layer_structure[0]):
-        font = pygame.font.SysFont('Calibri', 30, False, False)
+        font = pygame.font.SysFont('Calibri', 20, False, False)
         text = font.render(inputs[i], True, TEXT)
-        screen.blit(text, [0, (i + 1) * int(height / (layer_structure[0] + 2))])
+        screen.blit(text, [40, (i + 1) * int(height / (layer_structure[0] + 2))+40])
 
     # Label outputs
     for i in range(layer_structure[-1]):
-        font = pygame.font.SysFont('Calibri', 30, False, False)
+        font = pygame.font.SysFont('Calibri', 20, False, False)
         text = font.render(str(outputs[i]), True, TEXT)
-        screen.blit(text, [width + 50, (i + 1) * int(height / (layer_structure[-1] + 2))])
+        screen.blit(text, [width + 85, (i + 1) * int(height / (layer_structure[-1] + 2))+35])
 
     # Calculates an appropriate spacing of the layers
     xspacing = int(width / layerCount)
@@ -418,7 +415,7 @@ def displayNetwork(layer_sctructure, coefs):
         layer_circle_positions = []
         yspacing = int(height / (layer_structure[i] + 2))
         for j in range(layer_structure[i]):
-            layer_circle_positions.append(((i + 1) * xspacing, (j + 1) * yspacing))
+            layer_circle_positions.append(((i + 1) * xspacing+60, (j + 1) * yspacing+50))
         circle_positions.append(layer_circle_positions)
 
     # Draws a line between every node in one layer and every node in the next layer
@@ -469,7 +466,6 @@ paddles[-1].winner = True
 generation = 1
 b = 0
 MXScore=0
-FAST = False
 cu = 0
 c = 0
 finalisimo = False
@@ -495,17 +491,16 @@ while not done:
         # If you change the number of inputs, be sure to change the layer_structure at
         # the top and the input text in displayNetwork
 
-
         input = np.array([[paddle.rect.x, paddle.rect.y]])
-
+        #Calculem el mòdul de la distancia entre el paddle i la punta de la paret més propera
         if paddle.returnIndex() % 2 == 0:
             distancia = -80 + math.sqrt((pparedes[paddle.returnIndex() + 6][0] - paddle.rect.x) ** 2 + (
-                        pparedes[paddle.returnIndex() + 6][1] - paddle.rect.y) ** 2)
+                    pparedes[paddle.returnIndex() + 6][1] - paddle.rect.y) ** 2)
             distancia = -distancia
         else:
             distancia = -410 + math.sqrt(
                 (pparedes[paddle.returnIndex() + 6][0] + 500 - paddle.rect.x) ** 2 + (
-                            pparedes[paddle.returnIndex() + 6][1] + 500 - paddle.rect.y) ** 2)
+                        pparedes[paddle.returnIndex() + 6][1] + 500 - paddle.rect.y) ** 2)
 
         newa = np.array([[distancia]])
 
@@ -515,7 +510,7 @@ while not done:
         layer_structure[0] = int(input.size)
         paddle.command = calculateOutput(input, layer_structure, paddle.coefs, paddle.intercepts)
 
-        # 0=left, 1=right, 2=stop, 3=up, 4=down
+        # 0=left, 1=right, 2=xstop, 3=up, 4=down, 5=ystop
         if paddle.command == 0:
             paddle.xspeed = -10
         elif paddle.command == 1:
@@ -529,28 +524,17 @@ while not done:
         elif paddle.command == 5:
             paddle.yspeed = 0
 
-        # Update position of all living paddles
+        # Actualitzem la posició dels jugadors
 
         if paddle.alive == True:
-            # pastx = paddle.rect.x
-            # pasty = paddle.rect.y
-            # pastScore = paddle.score
             paddle.update(cuarto_actual.pared_lista)  # poner: (cuarto_actual.pared_lista)
-            # balls[i].update(paddle)
-            # paddle.Kill(pastx,pasty)
             still_alive += 1
 
-
-        # if paddle.score < pastScore and paddle.rect.x == pastx and paddle.rect.y == pasty:
-        #     paddle.alive = False
-
-
-        # Update high_score and high_scorer
         if paddle.rect.x > 784 and paddle.winner == True:
             finalisimo = True
             break
 
-
+        # Els punts màxims pasen a ser el high score
         if paddle.score > high_score:
             high_score = paddle.score
             high_score_index = i
@@ -560,66 +544,55 @@ while not done:
         if MXScore < high_score:
             MXScore = high_score
 
-        # Draw everything but the winner
+        # Dibuixa tot menys el guanyador
         if paddle.alive and paddle != winner:
             paddle.draw()
-            # balls[i].winner = False
-            # balls[i].draw()
             paddle.winner = False
 
-    # draw the winner last (so that it is not hidden behind other paddles)
+    # dibuixem el guanyador després, així fem que estigui al front
     paddles[high_score_index].draw()
-    # balls[high_score_index].draw()
     cuarto_actual.pared_lista.draw(screen)
-    # If all the paddles are dead, reproduce the most fit one
 
 
-    if still_alive == 0 or b > 3+generation/1  or FAST == True:
+
+    if still_alive == 0 or b > 3+generation/2:
         generation += 1
         winner.reset()
-        # print(high_score_index)
-        # clear the generation
         paddles = []
-
         b=0
-        # Fill it with mutations of the winner
         for i in range(COUNT - 1):
             paddles.append(Paddle(coefs=mutateCoefs(winner.coefs), intercepts=mutateIntercepts(winner.intercepts)))
-            # balls.append(Ball())
-        # add the winner itself
         paddles.append(winner)
-        # balls.append(Ball())
+
 
 
     if cuarto_actual_no == c and finalisimo == True:
         cuarto_actual_no = c + 1
         c += 1
-       
         cuarto = Cuarto1()
         cuartos.append(cuarto)
         cuarto_actual = cuartos[cuarto_actual_no]
-        generation += 1
+        
         winner.reset()
         paddles = []
         b = 0
         for i in range(COUNT - 1):
             paddles.append(Paddle(coefs=mutateCoefs(winner.coefs), intercepts=mutateIntercepts(winner.intercepts)))
-            # balls.append(Ball())
-        # add the winner itself
         paddles.append(winner)
         finalisimo = False
+
     b = b+(clock.get_time()/1000)
     font = pygame.font.SysFont('Calibri', 30, False, False)
     text = font.render("Score = " + str(math.trunc(high_score/10)), True, TEXT)
     screen.blit(text, [size[0] - 325, 30])
     text = font.render("MXScore = " + str(math.trunc(MXScore / 10)), True, TEXT)
-    screen.blit(text, [size[0] - 325, 60])
-    text2 = font.render("Still alive = " + str(still_alive), True, TEXT)
-    screen.blit(text2, [size[0] - 600, 60])
-    text2 = font.render("Generation = " + str(generation), True, TEXT)
-    screen.blit(text2, [size[0] - 600, 30])
-    text2 = font.render("Time = " + str(math.trunc(b)), True, TEXT)
-    screen.blit(text2, [size[0] - 800, 30])
+    screen.blit(text, [size[0] - 325, 90])
+    text2 = font.render("Generació = " + str(generation), True, TEXT)
+    screen.blit(text2, [size[0] - 325, 150])
+    text2 = font.render("Temps = " + str(math.trunc(b))+" de "+str(math.trunc(3+generation/2))+ " s", True, TEXT)
+    screen.blit(text2, [size[0] - 325, 210])
+    text2 = font.render("Xarxa neuronal del guanyador:", True, TEXT)
+    screen.blit(text2, [size[0] - 790, 30])
     displayNetwork(layer_structure, winner.coefs)
 
     pygame.display.flip()
