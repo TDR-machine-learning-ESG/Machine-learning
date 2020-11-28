@@ -155,8 +155,8 @@ class Paddle(pygame.sprite.Sprite):
 
         if self.rect.x < 0:
             self.rect.x = 0
-        elif self.rect.x > size[0]:
-            self.rect.x = size[0]
+        elif self.rect.x > size[0] - 100:
+            self.rect.x = size[0] - 100
         if self.rect.y < 0:
             self.rect.y = 0
         elif self.rect.y > size[1]:
@@ -196,7 +196,7 @@ class Paddle(pygame.sprite.Sprite):
         # print ((self.PosControl +1)%2 )
         # print (xPassControl[self.PosControl])
         if self.winner == True:
-            print (self.rect.x)
+            print (self.PosControl)
 
         if (self.PosControl) % 2 == 0:
             self.score = self.poScore + (Scorey[self.PosControl]) - self.rect.y + self.rect.x
@@ -300,7 +300,7 @@ class Cuarto1(Cuarto):
         ddd = 0
         for item in paredes:
             pared = Pared(item[0], item[1], item[2], item[3], item[4])
-            pparedes.append((item[0]-100, item[1]))
+            pparedes.append((item[0] - 100, item[1]))
             if ddd > 5:
                 Scorey.append(item[1])
 
@@ -310,9 +310,9 @@ class Cuarto1(Cuarto):
         pparedes.append((780-100, 450))
         Scorey.append(450)
         xPassControl.append(780)
-        # pparedes.append((820-100, 450))
-        # Scorey.append(450)
-        # xPassControl.append(820)
+        pparedes.append((820, 450))
+        Scorey.append(450)
+        xPassControl.append(820)
 
 
 
@@ -472,7 +472,6 @@ b = 0
 MXScore=0
 FAST = False
 cu = 5
-c = 0
 while not done:
     screen.fill(FILL)
     cuarto_actual.pared_lista.draw(screen)
@@ -544,16 +543,6 @@ while not done:
 
 
         # Update high_score and high_scorer
-        if paddle.rect.x > 784:
-
-            if cuarto_actual_no == c:
-                cuarto_actual_no = c+1
-                c+= 1
-                print(c)
-                cuarto = Cuarto1()
-                cuartos.append(cuarto)
-                cuarto_actual = cuartos[cuarto_actual_no]
-                paddle.reset()
 
         if paddle.score > high_score:
             high_score = paddle.score
@@ -578,7 +567,7 @@ while not done:
     # If all the paddles are dead, reproduce the most fit one
 
 
-    if still_alive == 0 or b > 3+generation/1  or FAST == True:
+    if still_alive == 0 or b > 3+generation/3  or FAST == True:
         generation += 1
         winner.reset()
         # print(high_score_index)
