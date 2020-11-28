@@ -1,37 +1,35 @@
+# Declarem les llibreries que utilitzarem
 import pygame
 import numpy as np
 import random
 import math
 
+# Definim les variables que deprés ens serivarn com a colors. Els valors són valors RGB
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 180, 0)
 BLUE = (50, 200, 255)
+
 FILL = BLACK
 TEXT = WHITE
-
-NEGRO = (0, 0, 0)
-BLANCO = (255, 255, 255)
-AZUL = (0, 0, 255)
-VERDE = (0, 255, 0)
-ROJO = (255, 0, 0)
-VIOLETA = (255, 0, 255)
-
+# Inicialitzem la llibreria pygame
 pygame.init()
 
+# Especifiquem l'estructura de la xarxa neuronal. Aquí incluim la capa d'entrada i la de sortida.
+# Exemple: 3 neurones a la capa d'entrada, 6 neurones a la capa de sortida i 2 capes ocultes amb 4 i 5 neurones
+# cadascuna. En cas de voler canviar l'arquitectura de la xarxa, es primordial canviar aquests valors
+# sempre es poden afegir més capes ocultes a la xarxa.
 
-# Here you can specify the structure of the neural network. This includes the input layer and output layer.
-# e.g 3 inputs, 5 node hidden layer, 4 outputs would be [3, 5, 4]
-# Be sure to update this if you add inputs
-layer_structure = [3,4,5,6]
+layer_structure = [3, 4, 5, 6]
 
-# Initializing the display window
-size = (800, 900)
+# Inicialitzem la pantalla amb una mida 800x800
+size = (800, 800)
 screen = pygame.display.set_mode(size)
+# Definim el nom de la finestra.
+pygame.display.set_caption("ESG IA")
 
-pygame.display.set_caption("pong")
-
+# Definim els coeficients amb els quals mutarem el nostre genoma.
 testCoefs = [np.array([[0.38238344, 0.7515745, 0.29565119, 0.35490288, 0.97040034],
                        [0.33545982, 0.0973694, 0.41539856, 0.76129553, 0.93089118],
                        [0.85154809, -0.0240888, 0.74555908, -0.34759429, 0.37355357],
@@ -43,35 +41,35 @@ testCoefs = [np.array([[0.38238344, 0.7515745, 0.29565119, 0.35490288, 0.9704003
                        [0.71931642, 0.8930938, 0.24538791]])]
 
 
-# Paddle class
+# La calsse "Pared" ens permetrà mostrar les parets
 class Pared(pygame.sprite.Sprite):
-    """Esta clase representa la barra inferior que controla el protagonista """
-
-    def __init__(self, x, y, largo, alto, color):
-        """ Función Constructor """
-
-        # Llama al constructor padre
+    # Creem la funció del constructor
+    def __init__(self, x, y, llargada, altura, color):
+        # Cridem al constructor pare de la llibreria pygame
         super().__init__()
 
-        # Crea una pared AZUL, con las dimensiones especificadas en los parámetros
-        self.image = pygame.Surface([largo, alto])
+        # Creem una paret amb les característiques que haguem definit
+        self.image = pygame.Surface([llargada, altura])
         self.image.fill(color)
 
-        # Establece como origen la esquina superior izquierda.
+        # Establim el punt de referència en la cantonada superior esquerra.
         self.rect = self.image.get_rect()
         self.rect.y = y
         self.rect.x = x
 
 
-class Paddle(pygame.sprite.Sprite):
-
-    def __init__(self, x=30, y=450, xspeed=0, yspeed=0, coefs=0, intercepts=0):
-
+# La classe "Player" ens permetrà crear diversos objectes player que seràn qui jugaran al joc.
+class Player(pygame.sprite.Sprite):
+    # Creem el constructor de la classe.
+    def __init__(self, x=30, y=350, xspeed=0, yspeed=0, coefs=0, intercepts=0):
+        # Tornem a cridar al constructor pare per la classe Player.
         super().__init__()
+        # Definim totes les variables que actuaran a la calsse Player, és a dir,
+        # les característiques dels objectes.
         self.PosControl = 0
-        self.poScore =0
+        self.poScore = 0
         self.image = pygame.Surface([15, 15])
-        self.image.fill(VIOLETA)
+        self.image.fill(WHITE)
         self.rect = self.image.get_rect()
         self.secondChance = 0
         self.ShallDie = False
@@ -82,9 +80,10 @@ class Paddle(pygame.sprite.Sprite):
         self.yspeed = yspeed
         self.xspeed = xspeed
         self.alive = True
-        self.score = self.rect.x -20
+        self.score = self.rect.x - 20
         self.command = 2
         self.winner = False
+        # Generem els coeficients per a l'objecte.
         if coefs == 0:
             self.coefs = self.generateCoefs(layer_structure)
         else:
@@ -94,15 +93,16 @@ class Paddle(pygame.sprite.Sprite):
         else:
             self.intercepts = intercepts
 
-    # Creates random coefficients for the neural network
+    # Creem coeficients aletoris per a la xarxa neuronal
     @staticmethod
     def generateCoefs(layer_structure):
         coefs = []
         for i in range(len(layer_structure) - 1):
+            # Afegim els valors creats al vector coefs
             coefs.append(np.random.rand(layer_structure[i], layer_structure[i + 1]) * 2 - 1)
         return coefs
 
-    # Creates random intercepts for the neural network
+    # Creem interceptors aletoris per a la xarxa neuronal
     @staticmethod
     def generateIntercepts(layer_structure):
         intercepts = []
@@ -110,7 +110,7 @@ class Paddle(pygame.sprite.Sprite):
             intercepts.append(np.random.rand(layer_structure[i + 1]) * 2 - 1)
         return intercepts
 
-    # Returns mutated coefs
+    # Retorna els coeficients mutats
     def mutateCoefs(self):
         newCoefs = self.coefs.copy()
         for i in range(len(newCoefs)):
@@ -119,7 +119,7 @@ class Paddle(pygame.sprite.Sprite):
                     newCoefs[i][row][col] = np.random.normal(newCoefs[i][row][col], 1)
         return newCoefs
 
-    # Returns mutated intercepts
+    # Retorna els interceptors mutats
     def mutateIntercepts(self):
         newIntercepts = self.intercepts.copy()
         for i in range(len(newIntercepts)):
@@ -127,16 +127,16 @@ class Paddle(pygame.sprite.Sprite):
                 newIntercepts[i][row] = np.random.normal(newIntercepts[i][row], 1)
         return newIntercepts
 
-    # Returns a paddle with mutated coefs and intercepts
+    # Actualitzem els coeficients i els interceptors dels jugador amb els nous mutats
     def mutate(self):
-        return Paddle(coefs=self.mutateCoefs(), intercepts=self.mutateIntercepts())
+        return Player(coefs=self.mutateCoefs(), intercepts=self.mutateIntercepts())
 
-    # Reset score, speed and position
+    # Aquest mètode reseteja els valors predeterminats del objecte.
     def reset(self):
-        self.rect.x = 20
-        self.rect.y = 450
+        self.rect.x = 30
+        self.rect.y = 350
         self.ylast = 30
-        self.xlast = 450
+        self.xlast = 350
         self.xspeed = 0
         self.yspeed = 0
         self.alive = True
@@ -144,12 +144,10 @@ class Paddle(pygame.sprite.Sprite):
         self.poScore = 0
         self.PosControl = 0
 
-    # Update position based on speed
-    def update(self, paredes):
+    # Actualitzem la posició basant-nos en la velocitat
+    def update(self, parets):
         self.xlast = self.rect.x
         self.ylast = self.rect.y
-
-
 
         if self.rect.x < 0:
             self.rect.x = 0
@@ -159,41 +157,34 @@ class Paddle(pygame.sprite.Sprite):
             self.rect.y = 0
         elif self.rect.y > size[1]:
             self.rect.y = size[1] - 35
-
+        # Comprovem que l'objecte no hagi col·lisionat amb res
         self.rect.y += self.yspeed
-        lista_impactos_bloques = pygame.sprite.spritecollide(self, paredes, False)
-
-        for bloque in lista_impactos_bloques:
-            # Si nos estamos desplazando hacia la derecha, hacemos que nuestro lado derecho sea el lado izquierdo del objeto que hemos tocado.
+        llista_impactes_blocs = pygame.sprite.spritecollide(self, parets, False)
+        # Comprovem cada bloc
+        for bloc in llista_impactes_blocs:
+            # Si l'objecte es desplaça cap a la dreta i toca un objecte, detectem la col·lisió fent que el costat dret del jugador sigui el costat
+            # esquerra del bloc amb el que hem col·lisionat.
             if self.yspeed > 0:
-                self.rect.bottom = bloque.rect.top
-
+                self.rect.bottom = bloc.rect.top
 
             else:
-                # En caso contrario, si nos desplazamos hacia la izquierda, hacemos lo opuesto.
+                # En el cas contrari, fem l'oposat.
                 self.rect.top = self.rect.bottom
 
-
-        # Desplazar arriba/izquierda
+        # Fem el mateix que anteriorment, però pels impactes d'adalt a baix
 
         self.rect.x += self.xspeed
-        # Comprobamos si hemos chocado contra algo
-        lista_impactos_bloques = pygame.sprite.spritecollide(self, paredes, False)
 
-        for bloque in lista_impactos_bloques:
+        llista_impactes_blocs = pygame.sprite.spritecollide(self, parets, False)
 
-            # Reseteamos nuestra posición basándonos en la parte superior/inferior del objeto.
+        for bloc in llista_impactes_blocs:
+
             if self.xspeed > 0:
 
-                self.rect.right = bloque.rect.left
+                self.rect.right = bloc.rect.left
 
             else:
-                self.rect.left = bloque.rect.right
-
-
-        # print ((self.PosControl +1)%2 )
-        # print (xPassControl[self.PosControl])
-
+                self.rect.left = bloc.rect.right
 
         if (self.PosControl) % 2 == 0:
             self.score = self.poScore + Scorey[self.PosControl] - self.rect.y + self.rect.x
@@ -201,29 +192,15 @@ class Paddle(pygame.sprite.Sprite):
             self.score = self.poScore + Scorey[self.PosControl] + self.rect.y + self.rect.x
 
         if (self.rect.x) > xPassControl[self.PosControl]:
-            self.poScore = self.score + 302
+            self.poScore = self.score + 352
             self.PosControl += 1
         self.xlast = self.rect.x
         self.ylast = self.rect.y
 
-    def returnIndex (self):
+    def returnIndex(self):
         return self.PosControl
 
-    # def Kill(self,pastx,pasty):
-    #
-    #
-    #     if (pastx > self.rect.x or pastx == self.rect.x) and (pasty == self.rect.y):
-    #         self.ShallDie = True
-    #         self.alive = False
-    # self.secondChance += 1
-    # else:
-    #     self.ShallDie = False
-    #     self.secondChance =0
-
-    # if self.ShallDie == True and self.secondChance == 2:
-    #     self.alive = False
-
-    # Draw the paddle to the screen
+    # Dibuixem la figura del jugador
 
     def draw(self):
         if not self.winner:
@@ -234,103 +211,98 @@ class Paddle(pygame.sprite.Sprite):
             pygame.draw.rect(screen, BLUE, [self.rect.x + 2, self.rect.y, 15 - 4, 15 - 4])
 
 
+class Nivell:
+    """ Classe base per a tots els nivells"""
 
-# Ball class
-
-
-class Cuarto:
-    """ Clase base para todos los cuartos. """
-
-    # Cada cuarto tiene una lista de paredes, y de los sprites enemigos.
+    # Tots els nivells tenen una llista amb la posició de les parets
     pared_lista = None
-    sprites_enemigos = None
 
     def __init__(self):
-        """ Constructor, creamos nuestras listas. """
+        """ Constructor, creem les variables generals. """
         self.pared_lista = pygame.sprite.Group()
-        self.sprites_enemigos = pygame.sprite.Group()
 
 
-pparedes = []
+# Definim uns vectors que utilitzarem més tard
+
+Parets1 = []
 Scorey = []
 ReferenceY = []
 xPassControl = []
-class Cuarto1(Cuarto):
-    """Esto crea todas las paredes del cuarto 1"""
-    paredes = []
+
+
+class Nivell1(Nivell):
+    """Aquesta classe crea totes les parets del nivell 1"""
 
     def __init__(self):
         super().__init__()
-        # Crear las paredes. (x_pos, y_pos, largo, alto)
 
-        # Esta es la lista de las paredes. Cada una se especifica de la forma [x, y, largo, alto]
+        # Creem la llista amb les parets de cada nivell, on les dades signifiquen [x, y, largo, alto]
         varr = random
-        dd = random.randint(140, 400)
+        parets = [[0, 0, 20, 350, GREEN],
+                  [0, 350, 20, 250, GREEN],
+                  [20, 0, 760, 20, GREEN],
 
-        paredes = [[0, 100, 20, 350, VERDE],
-                   [0, 450, 20, 250, VERDE],
-                   [20, 100, 760, 20, VERDE],
+                  [780, 0, 20, 250, GREEN],
 
-                   [780, 100, 20, 250, VERDE],
+                  [780, 350, 20, 250, GREEN],  # Parets que delimiten l'espai de joc
+                  [20, 580, 760, 20, GREEN, 0],
+                  # Obstacles
+                  [50, 200, 10, 500,BLUE, 0],
+                  [100, 20, 10, 500, RED, 1],
+                  [150, varr.randint(40, 300), 10, 500, RED, 2],
+                  [200, 20, 10, 500, RED, 3],
+                  [250, varr.randint(40, 300), 10, 500, RED, 4],
+                  [300, 20, 10, 500, RED, 5],
+                  [350, varr.randint(40, 300), 10, 500, RED, 6],
+                  [400, 20, 10, 500, RED, 7],
+                  [450, varr.randint(40, 300), 10, 500, RED, 8],
+                  [500, 20, 10, 500, RED, 9],
+                  [550, varr.randint(40, 300), 10, 500, RED, 10],
+                  [600, 20, 10, 500, RED, 11],
+                  [650, varr.randint(40, 300), 10, 500, RED, 12],
+                  # pared
+                  [700, 20, 10, 500, RED, 13],[20, 580, 760, 20, GREEN]
+                  ]
 
-                   [780, 450, 20, 250, VERDE],  # Paredes que si són paredes
-                   [20, 680, 760, 20, VERDE, 0],
-                   # Obstaculo
-                   [50, 300, 10, 500, ROJO,0],
-                   [100, 120, 10, 500, ROJO,1],
-                   [150, varr.randint(140, 400), 10, 500, ROJO,2],
-                   [200, 120, 10, 500, ROJO,3],
-                   [250, varr.randint(140, 400), 10, 500, ROJO,4],
-                   [300, 120, 10, 500, ROJO,5],
-                   [350, varr.randint(140, 400), 10, 500, ROJO,6],
-                   [400, 120, 10, 500, ROJO,7],
-                   [450, varr.randint(140, 400), 10, 500, ROJO,8],
-                   [500, 120, 10, 500, ROJO,9],
-                   [550, varr.randint(140, 400), 10, 500, ROJO,10],
-                   [600, 120, 10, 500, ROJO,11],
-                   [650, varr.randint(140, 400), 10, 500, ROJO,12],
-                   # pared
-                   [700, 120, 10, 500, ROJO,13]
-                   ]
-
-        # Iteramos a través de la lista. Creamos la pared y la añadimos a la lista.
+        # iterem  a través de la llista. Creem un objecte pared i l'afegim a la llista.
         ddd = 0
-        for item in paredes:
-            pared = Pared(item[0], item[1]+200, item[2], item[3], item[4])
-            pparedes.append((item[0]-100, item[1]))
-            if ddd > 5:
-                Scorey.append(item[1]+200)
-
+        for item in parets:
+            pared = Pared(item[0], item[1] + 200, item[2], item[3], item[4])
+            Parets1.append((item[0] - 100, item[1]))
+            # Per a tots els obstacles extrellem la cordenada x i y per tal de poder calcular més tard 
+            # els punts amb que conta cada jugador. 
+            if ddd > 5 and ddd<20:
+                Scorey.append(item[1] + 100)
                 xPassControl.append(item[0])
             self.pared_lista.add(pared)
             ddd += 1
-        pparedes.append((780-100, 650))
-        Scorey.append(650)
+        Parets1.append((780 - 100, 550))
+        Scorey.append(550)
         xPassControl.append(820)
 
-        # pparedes.append((820-100, 450))
-        # Scorey.append(450)
-        # xPassControl.append(820)
 
-
-
-# Predicts the output for a given input given an array of coefficients and an array of intercepts
+# Prediu els valors de sortida per a un cert valor d'entrada donat un vector de coeficients i un vector d'interceptors
 def calculateOutput(input, layer_structure, coefs, intercepts, g="identity"):
-    # The values of the neurons for each layer will be stores in "layers", so here the input layer is added to start
-    # (Stuff is transposed since we need columns for matrix multiplication)
+    # g es la funció d'activació que utilitzarem
+    # Els valors de les neurones de cada capa, estaran guardades en "layers", així que la capa d'entrada s'afegeix al principi d'aquestes capes
+    # (Transposem la matriu entrada per a obtenir columnes per a fer una multiplicació matricial)
     layers = [np.transpose(input)]
-    # The current layer will be affected by the previous layer,
-    # so here we define the starting previousLayer as the input
+
+    # Cada capa es veurà affectada per la capa anterior, així que definim
+    # la "previousLayer" inicial com el input (valor d'entrada.)
     previousLayer = np.transpose(input)
 
     reduced_layer_structure = layer_structure[1:]
-    # Loops through the all the layers except the input
+    # Fem un bucle per totes les capes excepte la capa d'entrada.
     for k in range(len(reduced_layer_structure)):
-        # creates an empty array of the correct size
+
+        # Creem un vector buit de la mida correcta.
         currentLayer = np.empty((reduced_layer_structure[k], 1))
-        # The resulting layer is a matrix multiplication of the previousLayer and the coefficients, plus the intercepts
+
+        # La capa resultant es el resultat de la multiplicació matricial de previousLayer i els coefficients més la matriu interceptos.
         result = np.matmul(np.transpose(coefs[k]), previousLayer) + np.transpose(np.array([intercepts[k]]))
-        # The value of each neuron is then put through a function g()
+
+        # Passem el valor de cada neurona per la funció d'activació g()       
         for i in range(len(currentLayer)):
             if g == "identity":
                 currentLayer[i] = result[i]
@@ -343,16 +315,17 @@ def calculateOutput(input, layer_structure, coefs, intercepts, g="identity"):
                     currentLayer[i] = 1 / (1 + np.exp(-1 * result[i]))
                 except OverflowError:
                     currentLayer[i] = 0
-        # The current layer is then added to the layers list, and the previousLayer variable is updated
+
+        # Afegim currentLayer a la llista de capes (layers) i actualitzem la variable previousLayer
         layers.append(currentLayer)
         previousLayer = currentLayer.copy()
 
-    # Returns the index of the highest value neuron in the output layer (aka layers[-1])
-    # E.g. if the 7th neuron has the highest value, returns 7
+    # Retornem l'index de la neurona amb màxim valor a la capa de sortida (layers[-1])
+    # Exemple: si la neurona 5 te el màxim valor, retorna 5
     return layers[-1].tolist().index(max(layers[-1].tolist()))
 
 
-# Returns a set of coefficients which are a mutation of the input
+# Retorna una varietat de coefficients que són una mutació dels inputs
 def mutateCoefs(coefs):
     newCoefs = []
     for array in coefs:
@@ -364,7 +337,8 @@ def mutateCoefs(coefs):
     return newCoefs
 
 
-# Returns a set of intercepts which are a mutation of the input
+# Retorna una varietat de interceptors que són una mutació dels inputs
+
 def mutateIntercepts(intercepts):
     newIntercepts = []
     for array in intercepts:
@@ -375,50 +349,46 @@ def mutateIntercepts(intercepts):
     return newIntercepts
 
 
-# Displays the nodes of a network, along with weighted lines showing the coefficient influences
+# Mostra els nodes de la xarxa, així com els pesos (weights) representat amb linies i la influencia del coeficient.
 def displayNetwork(layer_sctructure, coefs):
-    # Stores the larges coefficient, so we can scale the thicknesses accordingly.
+    # Gurada el coeficient més gran, cosa que ens permet escalar el grossor de les linies.
     max_coef = np.max(coefs[0])
-
-    # Determines how much space this visual network will take up
-    height = 300
+    # Determina l'espai que ocupa la xarxa a la pantalla
+    height = 200
     width = 300
 
     inputs = []
     cdd = 0
 
-    inputs = ["PosX","PosY","Distància"]
+    inputs = ["PosX", "PosY", "Distància"]
     outputs = ["Left", "Right", "X stop", "Up", "Down", "Y stop"]
 
     layerCount = len(layer_structure)
-    # This will store the positions of all the nodes (organized with sub-lists of each layer)
+    # Guarda les posicións de tots els nodes
     circle_positions = []
 
-    # Label inputs
+    # Etiquetes dels inputs
     for i in range(layer_structure[0]):
         font = pygame.font.SysFont('Calibri', 20, False, False)
         text = font.render(inputs[i], True, TEXT)
-        screen.blit(text, [40, (i + 1) * int(height / (layer_structure[0] + 2))+40])
+        screen.blit(text, [40, (i + 1) * int(height / (layer_structure[0] + 2)) + 20])
 
-    # Label outputs
+    # Etiquetes dels outputs
     for i in range(layer_structure[-1]):
         font = pygame.font.SysFont('Calibri', 20, False, False)
         text = font.render(str(outputs[i]), True, TEXT)
-        screen.blit(text, [width + 85, (i + 1) * int(height / (layer_structure[-1] + 2))+35])
-
-    # Calculates an appropriate spacing of the layers
+        screen.blit(text, [width + 85, (i + 1) * int(height / (layer_structure[-1] + 2)) + 15])
+    # Calcula l'espai entre capes
     xspacing = int(width / layerCount)
-
-    # Determine the location of the neurons for each layer, stores that in a list,
-    # and stores those lists in circle_positions
+    # Determina la posició de les neuornes per cada capa, guarda aquesta posició a una llista
+    # i guarda aquesta llista en circle_positions
     for i in range(layerCount):
         layer_circle_positions = []
         yspacing = int(height / (layer_structure[i] + 2))
         for j in range(layer_structure[i]):
-            layer_circle_positions.append(((i + 1) * xspacing+60, (j + 1) * yspacing+50))
+            layer_circle_positions.append(((i + 1) * xspacing + 60, (j + 1) * yspacing + 30))
         circle_positions.append(layer_circle_positions)
-
-    # Draws a line between every node in one layer and every node in the next layer
+    # Dibuixa una linia entre cada neurona en una capa, i cada neurona a la capa següent.
     for i in range(len(circle_positions) - 1):
         for j, circle_pos in enumerate(circle_positions[i]):
             for k, circle_pos2 in enumerate(circle_positions[i + 1]):
@@ -429,7 +399,7 @@ def displayNetwork(layer_sctructure, coefs):
                 else:
                     pygame.draw.lines(screen, RED, False, [circle_pos, circle_pos2], -thickness)
 
-    # Draws circles in the positions of the nodes (over the lines)
+    # Dibuixa els cercles en la posició pertinent.
     for layer in circle_positions:
         for circle_pos in layer:
             pygame.draw.circle(screen, BLACK, circle_pos, 20, 0)
@@ -443,156 +413,156 @@ clock = pygame.time.Clock()
 
 COUNT = 100
 
-# create sprites
-paddles = []
-# balls = []
+# Crea els spties jugador
+players = []
+# Crea els spties nivells
 cuartos = []
 
-cuarto = Cuarto1()
+cuarto = Nivell1()
 cuartos.append(cuarto)
 cuarto_actual_no = 0
 cuarto_actual = cuartos[cuarto_actual_no]
 
 for i in range(100):
-    paddles.append(Paddle())
-    # balls.append(Ball())
+    players.append(Player())
 
-# The first winner is arbitrarily chosen to be the last one (just so the user has a network to watch on screen)
-winner = paddles[-1]
-# winnner = balls [-1]
-paddles[-1].winner = True
+# El primer guanyador es escollit arbitrariament per a ser l'ultima instancia de l'objecte (per a mostrar alguna cosa)
+winner = players[-1]
+players[-1].winner = True
 
-# game's main loop
+# Comença el bucle principal del joc
+victory = 0
 generation = 1
 b = 0
-MXScore=0
+MXScore = 0
 cu = 0
 c = 0
 finalisimo = False
 while not done:
     screen.fill(FILL)
     cuarto_actual.pared_lista.draw(screen)
-    # Track the number of paddles still alive in this generation
     still_alive = 0
-    # Track the high score and the index of the highest scoring paddle
+    # Porta un recompte de la puntuació màxima
     highP = 0
     high_score = -9e99
     high_score_index = -1
 
-    # Allow user to exit at any time
+    # Permet a l'usuari sortir del joc en qualsevol moment
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
 
-    # Loop through all the paddles
+    # Fa un bulce per totes les instancies de jugador
 
-    for i, paddle in enumerate(paddles):
-        # If you change the number of inputs, be sure to change the layer_structure at
-        # the top and the input text in displayNetwork
+    for i, player in enumerate(players):
+        # Recull els inputs de cada jugador
 
-        input = np.array([[paddle.rect.x, paddle.rect.y]])
-        #Calculem el mòdul de la distancia entre el paddle i la punta de la paret més propera
-        if paddle.returnIndex() % 2 == 0:
-            distancia = -80 + math.sqrt((pparedes[paddle.returnIndex() + 6][0] - paddle.rect.x) ** 2 + (
-                    pparedes[paddle.returnIndex() + 6][1] - paddle.rect.y) ** 2)
+        input = np.array([[player.rect.x, player.rect.y]])
+        # Calculem el mòdul de la distancia entre el paddle i la punta de la paret més propera
+        if player.returnIndex() % 2 == 0:
+            distancia = -80 + math.sqrt((Parets1[player.returnIndex() + 6][0] - player.rect.x) ** 2 + (
+                    Parets1[player.returnIndex() + 6][1] - player.rect.y) ** 2)
             distancia = -distancia
         else:
             distancia = -410 + math.sqrt(
-                (pparedes[paddle.returnIndex() + 6][0] + 500 - paddle.rect.x) ** 2 + (
-                        pparedes[paddle.returnIndex() + 6][1] + 500 - paddle.rect.y) ** 2)
+                (Parets1[player.returnIndex() + 6][0] + 500 - player.rect.x) ** 2 + (
+                        Parets1[player.returnIndex() + 6][1] + 500 - player.rect.y) ** 2)
 
         newa = np.array([[distancia]])
 
         input = np.append(input, newa, axis=1)
 
-
         layer_structure[0] = int(input.size)
-        paddle.command = calculateOutput(input, layer_structure, paddle.coefs, paddle.intercepts)
+        player.command = calculateOutput(input, layer_structure, player.coefs, player.intercepts)
 
         # 0=left, 1=right, 2=xstop, 3=up, 4=down, 5=ystop
-        if paddle.command == 0:
-            paddle.xspeed = -10
-        elif paddle.command == 1:
-            paddle.xspeed = 10
-        elif paddle.command == 2:
-            paddle.xspeed = 0
-        elif paddle.command == 3:
-            paddle.yspeed = -10
-        elif paddle.command == 4:
-            paddle.yspeed = 10
-        elif paddle.command == 5:
-            paddle.yspeed = 0
+        if player.command == 0:
+            player.xspeed = -10
+        elif player.command == 1:
+            player.xspeed = 10
+        elif player.command == 2:
+            player.xspeed = 0
+        elif player.command == 3:
+            player.yspeed = -10
+        elif player.command == 4:
+            player.yspeed = 10
+        elif player.command == 5:
+            player.yspeed = 0
 
         # Actualitzem la posició dels jugadors
 
-        if paddle.alive == True:
-            paddle.update(cuarto_actual.pared_lista)  # poner: (cuarto_actual.pared_lista)
+        if player.alive == True:
+            player.update(cuarto_actual.pared_lista)  # poner: (cuarto_actual.pared_lista)
             still_alive += 1
 
-        if paddle.rect.x > 784 and paddle.winner == True:
+        if player.rect.x > 784 and player.winner == True:
             finalisimo = True
             break
 
         # Els punts màxims pasen a ser el high score
-        if paddle.score > high_score:
-            high_score = paddle.score
+        if player.score > high_score:
+            high_score = player.score
             high_score_index = i
-            winner = paddles[i]
+            winner = players[i]
             winner.winner = True
 
         if MXScore < high_score:
             MXScore = high_score
 
         # Dibuixa tot menys el guanyador
-        if paddle.alive and paddle != winner:
-            paddle.draw()
-            paddle.winner = False
+        if player.alive and player != winner:
+            player.draw()
+            player.winner = False
 
     # dibuixem el guanyador després, així fem que estigui al front
-    paddles[high_score_index].draw()
+    players[high_score_index].draw()
     cuarto_actual.pared_lista.draw(screen)
-
-
-
-    if still_alive == 0 or b > 3+generation/2:
+    # Condició per a canviar de generació
+    if still_alive == 0 or b > 3 + generation / 2:
         generation += 1
         winner.reset()
-        paddles = []
-        b=0
+        players = []
+        b = 0
         for i in range(COUNT - 1):
-            paddles.append(Paddle(coefs=mutateCoefs(winner.coefs), intercepts=mutateIntercepts(winner.intercepts)))
-        paddles.append(winner)
-
-
-
+            players.append(Player(coefs=mutateCoefs(winner.coefs), intercepts=mutateIntercepts(winner.intercepts)))
+        players.append(winner)
+    # Condició per a canviar de nivell
     if cuarto_actual_no == c and finalisimo == True:
         cuarto_actual_no = c + 1
         c += 1
-        cuarto = Cuarto1()
+        cuarto = Nivell1()
         cuartos.append(cuarto)
         cuarto_actual = cuartos[cuarto_actual_no]
-        
+        victory += 1
         winner.reset()
-        paddles = []
+        players = []
         b = 0
         for i in range(COUNT - 1):
-            paddles.append(Paddle(coefs=mutateCoefs(winner.coefs), intercepts=mutateIntercepts(winner.intercepts)))
-        paddles.append(winner)
+            players.append(Player(coefs=mutateCoefs(winner.coefs), intercepts=mutateIntercepts(winner.intercepts)))
+        players.append(winner)
         finalisimo = False
-
-    b = b+(clock.get_time()/1000)
-    font = pygame.font.SysFont('Calibri', 30, False, False)
-    text = font.render("Score = " + str(math.trunc(high_score/10)), True, TEXT)
-    screen.blit(text, [size[0] - 325, 30])
+    # Mostrem informació útil per a l'usuari
+    b = b + (clock.get_time() / 1000)
+    font = pygame.font.SysFont('Calibri', 25, False, False)
+    # Punts del guanyador
+    text = font.render("Score = " + str(math.trunc(high_score / 10)), True, TEXT)
+    screen.blit(text, [size[0] - 325, 0])
+    # Punts màxims obtinguts en el nivell
     text = font.render("MXScore = " + str(math.trunc(MXScore / 10)), True, TEXT)
-    screen.blit(text, [size[0] - 325, 90])
+    screen.blit(text, [size[0] - 325, 30])
+    # Generació actual
     text2 = font.render("Generació = " + str(generation), True, TEXT)
-    screen.blit(text2, [size[0] - 325, 150])
-    text2 = font.render("Temps = " + str(math.trunc(b))+" de "+str(math.trunc(3+generation/2))+ " s", True, TEXT)
-    screen.blit(text2, [size[0] - 325, 210])
+    screen.blit(text2, [size[0] - 325, 60])
+    # Temps que porta en la partida, i temps restant per a actualitzar la generació
+    text2 = font.render("Temps = " + str(math.trunc(b)) + " de " + str(math.trunc(3 + generation / 2)) + " s", True,
+                        TEXT)
+    screen.blit(text2, [size[0] - 325, 90])
+    # Nivell
+    text = font.render(("Nivell:  " + str(victory)), True, TEXT)
+    screen.blit(text, [size[0] - 325, 120])
     text2 = font.render("Xarxa neuronal del guanyador:", True, TEXT)
-    screen.blit(text2, [size[0] - 790, 30])
+    screen.blit(text2, [size[0] - 790, 0])
     displayNetwork(layer_structure, winner.coefs)
 
     pygame.display.flip()
