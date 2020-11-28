@@ -27,7 +27,7 @@ pygame.init()
 # Here you can specify the structure of the neural network. This includes the input layer and output layer.
 # e.g 3 inputs, 5 node hidden layer, 4 outputs would be [3, 5, 4]
 # Be sure to update this if you add inputs
-layer_structure = [2, 6]
+layer_structure = [42, 6]
 
 # Initializing the display window
 size = (800, 700)
@@ -217,7 +217,7 @@ class Cuarto:
         self.pared_lista = pygame.sprite.Group()
         self.sprites_enemigos = pygame.sprite.Group()
 
-
+pparedes = []
 class Cuarto1(Cuarto):
     """Esto crea todas las paredes del cuarto 1"""
     paredes = []
@@ -259,8 +259,11 @@ class Cuarto1(Cuarto):
         # Iteramos a través de la lista. Creamos la pared y la añadimos a la lista.
         for item in paredes:
             pared = Pared(item[0], item[1], item[2], item[3], item[4])
-            self.pared_lista.add(pared)
 
+            pparedes.append(item[0])
+            pparedes.append(item[1])
+            self.pared_lista.add(pared)
+        print (len(pparedes))
 
 class Ball:
 
@@ -379,7 +382,12 @@ def displayNetwork(layer_sctructure, coefs):
     height = 300
     width = 300
 
-    inputs = ["paddle x", "paddle y"]
+    inputs = []
+    cdd = 0
+    while cdd < input.size:
+        inputs.append (" ")
+        print (inputs[cdd])
+        cdd +=1
     outputs = ["left", "right", "x stop", "up", "down", "y stop"]
 
     layerCount = len(layer_structure)
@@ -476,14 +484,14 @@ while not done:
         # If you change the number of inputs, be sure to change the layer_structure at
         # the top and the input text in displayNetwork
         input = np.array([[paddle.rect.x, paddle.rect.y]])
-        for ix in Cuarto1.paredes:
-            for ixx in ix[0]:
-                np.append(input, ixx)
-            for iyy in ix[1]:
-                np.apend(input, iyy)
 
-        # print (input.size)
-        # layer_structure [0] += int(input.size)
+        newa = np.array([pparedes])
+        print (input)
+        input = np.append(input,newa,axis=1)
+        print (newa)
+        print (input)
+
+        layer_structure [0] = int(input.size)
         paddle.command = calculateOutput(input, layer_structure, paddle.coefs, paddle.intercepts)
 
         # 0=left, 1=right, 2=stop, 3=up, 4=down
