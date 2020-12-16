@@ -247,7 +247,7 @@ class Nivell1(Nivell):
                   [780, 350, 20, 250, GREEN],  # Parets que delimiten l'espai de joc
                   [20, 580, 760, 20, GREEN, 0],
                   # Obstacles
-                  [50, 200, 10, 500,BLUE, 0],
+                  [50, 200, 10, 500,RED, 0],
                   [100, 20, 10, 500, RED, 1],
                   [150, varr.randint(40, 300), 10, 500, RED, 2],
                   [200, 20, 10, 500, RED, 3],
